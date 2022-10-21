@@ -80,12 +80,14 @@
   path: /components/schemas/submitSelfServiceVerificationFlowBody/oneOf
   value:
     - "$ref": "#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody"
+    - "$ref": "#/components/schemas/submitSelfServiceVerificationFlowWithCodeMethodBody"
 - op: add
   path: /components/schemas/submitSelfServiceVerificationFlowBody/discriminator
   value:
     propertyName: method
     mapping:
       link: "#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody"
+      code: "#/components/schemas/submitSelfServiceVerificationFlowWithCodeMethodBody"
 - op: add
   path: /components/schemas/selfServiceVerificationFlowState/enum
   value:

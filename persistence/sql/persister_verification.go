@@ -2,11 +2,16 @@ package sql
 
 import (
 	"context"
-	"errors"
+	"crypto/subtle"
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/x"
 
 	"github.com/gobuffalo/pop/v6"
 	"github.com/gofrs/uuid"
@@ -18,6 +23,8 @@ import (
 )
 
 var _ verification.FlowPersister = new(Persister)
+var _ link.VerificationTokenPersister = new(Persister)
+var _ code.VerificationCodePersister = new(Persister)
 
 func (p *Persister) CreateVerificationFlow(ctx context.Context, r *verification.Flow) error {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateVerificationFlow")
@@ -128,4 +135,143 @@ func (p *Persister) DeleteExpiredVerificationFlows(ctx context.Context, expiresA
 		return sqlcon.HandleError(err)
 	}
 	return nil
+}
+
+func (p *Persister) CreateVerificationCode(ctx context.Context, dto *code.CreateVerificationCodeParams) (*code.VerificationCode, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateVerificationCode")
+	defer span.End()
+
+	now := time.Now()
+
+	verificationCode := &code.VerificationCode{
+		ID:         x.NewUUID(),
+		CodeHMAC:   p.hmacValue(ctx, dto.RawCode),
+		ExpiresAt:  now.UTC().Add(dto.ExpiresIn),
+		IssuedAt:   now,
+		FlowID:     dto.FlowID,
+		NID:        p.NetworkID(ctx),
+		IdentityID: dto.IdentityID,
+	}
+
+	if dto.VerifiableAddress != nil {
+		verificationCode.VerifiableAddress = dto.VerifiableAddress
+		verificationCode.VerifiableAddressID = uuid.NullUUID{
+			UUID:  dto.VerifiableAddress.ID,
+			Valid: true,
+		}
+	}
+
+	if err := p.GetConnection(ctx).Create(verificationCode); err != nil {
+		return nil, err
+	}
+
+	return verificationCode, nil
+}
+
+// UseVerificationCode attempts to "use" the supplied code in the flow
+//
+// If the supplied code matched a code from the flow, no error is returned
+// If an invalid code was submitted with this flow more than 5 times, an error is returned
+// TODO: Extract the business logic to a new service/manager (https://github.com/ory/kratos/issues/2785)
+func (p *Persister) UseVerificationCode(ctx context.Context, fID uuid.UUID, codeVal string) (*code.VerificationCode, error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UseVerificationCode")
+	defer span.End()
+
+	var verificationCode *code.VerificationCode
+
+	nid := p.NetworkID(ctx)
+
+	flowTableName := new(verification.Flow).TableName(ctx)
+
+	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
+
+		/* #nosec G201 TableName is static */
+		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ?", flowTableName), fID, nid).Exec()); err != nil {
+			return err
+		}
+
+		var submitCount int
+		// Because MySQL does not support "RETURNING" clauses, but we need the updated `submit_count` later on.
+		/* #nosec G201 TableName is static */
+		if err := sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("SELECT submit_count FROM %s WHERE id = ? AND nid = ?", flowTableName), fID, nid).First(&submitCount)); err != nil {
+			if errors.Is(err, sqlcon.ErrNoRows) {
+				// Return no error, as that would roll back the transaction
+				return nil
+			}
+
+			return err
+		}
+
+		// This check prevents parallel brute force attacks to generate the verification code
+		// by checking the submit count inside this database transaction.
+		// If the flow has been submitted more than 5 times, the transaction is aborted (regardless of whether the code was correct or not)
+		// and we thus give no indication whether the supplied code was correct or not. See also https://github.com/ory/kratos/pull/2645#discussion_r984732899
+		if submitCount > 5 {
+			return errors.WithStack(code.ErrVerificationCodeSubmittedTooOften)
+		}
+
+		var verificationCodes []code.VerificationCode
+		if err = sqlcon.HandleError(tx.Where("nid = ? AND selfservice_verification_flow_id = ?", nid, fID).All(&verificationCodes)); err != nil {
+			if errors.Is(err, sqlcon.ErrNoRows) {
+				// Return no error, as that would roll back the transaction
+				return nil
+			}
+
+			return err
+		}
+
+	secrets:
+		for _, secret := range p.r.Config().SecretsSession(ctx) {
+			suppliedCode := []byte(p.hmacValueWithSecret(ctx, codeVal, secret))
+			for i := range verificationCodes {
+				code := verificationCodes[i]
+				if subtle.ConstantTimeCompare([]byte(code.CodeHMAC), suppliedCode) == 0 {
+					// Not the supplied code
+					continue
+				}
+				verificationCode = &code
+				break secrets
+			}
+		}
+
+		if verificationCode == nil || !verificationCode.IsValid() {
+			// Return no error, as that would roll back the transaction
+			return nil
+		}
+
+		var va identity.VerifiableAddress
+		if err := tx.Where("id = ? AND nid = ?", verificationCode.VerifiableAddressID, nid).First(&va); err != nil {
+			if err = sqlcon.HandleError(err); !errors.Is(err, sqlcon.ErrNoRows) {
+				return err
+			}
+		}
+		verificationCode.VerifiableAddress = &va
+
+		/* #nosec G201 TableName is static */
+		return sqlcon.HandleError(tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", verificationCode.TableName(ctx)), time.Now().UTC(), verificationCode.ID, nid).Exec())
+	})); err != nil {
+		return nil, err
+	}
+
+	if verificationCode == nil {
+		return nil, code.ErrVerificationCodeNotFound
+	}
+
+	if verificationCode.IsExpired() {
+		return nil, flow.NewFlowExpiredError(verificationCode.ExpiresAt)
+	}
+
+	if verificationCode.WasUsed() {
+		return nil, code.ErrVerificationCodeAlreadyUsed
+	}
+
+	return verificationCode, nil
+}
+
+func (p *Persister) DeleteVerificationCodesOfFlow(ctx context.Context, fID uuid.UUID) error {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteVerificationCode")
+	defer span.End()
+
+	/* #nosec G201 TableName is static */
+	return p.GetConnection(ctx).RawQuery(fmt.Sprintf("DELETE FROM %s WHERE selfservice_verification_flow_id = ? AND nid = ?", new(code.VerificationCode).TableName(ctx)), fID, p.NetworkID(ctx)).Exec()
 }

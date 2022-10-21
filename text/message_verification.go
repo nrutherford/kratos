@@ -33,10 +33,28 @@ func NewVerificationEmailSent() *Message {
 	}
 }
 
+func NewVerificationEmailWithCodeSent() *Message {
+	return &Message{
+		ID:      InfoSelfServiceVerificationEmailWithCodeSent,
+		Type:    Info,
+		Text:    "An email containing a verification code has been sent to the email address you provided.",
+		Context: context(nil),
+	}
+}
+
 func NewErrorValidationVerificationTokenInvalidOrAlreadyUsed() *Message {
 	return &Message{
 		ID:      ErrorValidationVerificationTokenInvalidOrAlreadyUsed,
 		Text:    "The verification token is invalid or has already been used. Please retry the flow.",
+		Type:    Error,
+		Context: context(nil),
+	}
+}
+
+func NewErrorValidationVerificationCodeInvalidOrAlreadyUsed() *Message {
+	return &Message{
+		ID:      ErrorValidationVerificationCodeInvalidOrAlreadyUsed,
+		Text:    "The verification code is invalid or has already been used. Please try again.",
 		Type:    Error,
 		Context: context(nil),
 	}

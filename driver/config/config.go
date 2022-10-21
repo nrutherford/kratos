@@ -71,6 +71,8 @@ const (
 	ViperKeyCourierTemplatesRecoveryCodeValidEmail           = "courier.templates.recovery_code.valid.email"
 	ViperKeyCourierTemplatesVerificationInvalidEmail         = "courier.templates.verification.invalid.email"
 	ViperKeyCourierTemplatesVerificationValidEmail           = "courier.templates.verification.valid.email"
+	ViperKeyCourierTemplatesVerificationCodeInvalidEmail     = "courier.templates.verification_code.invalid.email"
+	ViperKeyCourierTemplatesVerificationCodeValidEmail       = "courier.templates.verification_code.valid.email"
 	ViperKeyCourierSMTPFrom                                  = "courier.smtp.from_address"
 	ViperKeyCourierSMTPFromName                              = "courier.smtp.from_name"
 	ViperKeyCourierSMTPHeaders                               = "courier.smtp.headers"
@@ -143,6 +145,7 @@ const (
 	ViperKeySelfServiceRecoveryRequestLifespan               = "selfservice.flows.recovery.lifespan"
 	ViperKeySelfServiceRecoveryBrowserDefaultReturnTo        = "selfservice.flows.recovery.after." + DefaultBrowserReturnURL
 	ViperKeySelfServiceVerificationEnabled                   = "selfservice.flows.verification.enabled"
+	ViperKeySelfServiceVerificationUse                       = "selfservice.flows.verification.use"
 	ViperKeySelfServiceVerificationUI                        = "selfservice.flows.verification.ui_url"
 	ViperKeySelfServiceVerificationRequestLifespan           = "selfservice.flows.verification.lifespan"
 	ViperKeySelfServiceVerificationBrowserDefaultReturnTo    = "selfservice.flows.verification.after." + DefaultBrowserReturnURL
@@ -266,6 +269,8 @@ type (
 		CourierTemplatesRoot(ctx context.Context) string
 		CourierTemplatesVerificationInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesVerificationCodeInvalid(ctx context.Context) *CourierEmailTemplate
+		CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRecoveryInvalid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRecoveryValid(ctx context.Context) *CourierEmailTemplate
 		CourierTemplatesRecoveryCodeInvalid(ctx context.Context) *CourierEmailTemplate
@@ -632,6 +637,10 @@ func (p *Config) SelfServiceFlowRecoveryUse(ctx context.Context) string {
 	return p.GetProvider(ctx).String(ViperKeySelfServiceRecoveryUse)
 }
 
+func (p *Config) SelfServiceFlowVerificationUse(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeySelfServiceVerificationUse)
+}
+
 func (p *Config) SelfServiceFlowLoginBeforeHooks(ctx context.Context) []SelfServiceHook {
 	return p.selfServiceHooks(ctx, ViperKeySelfServiceLoginBeforeHooks)
 }
@@ -985,6 +994,14 @@ func (p *Config) CourierTemplatesVerificationInvalid(ctx context.Context) *Couri
 
 func (p *Config) CourierTemplatesVerificationValid(ctx context.Context) *CourierEmailTemplate {
 	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationValidEmail)
+}
+
+func (p *Config) CourierTemplatesVerificationCodeInvalid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeInvalidEmail)
+}
+
+func (p *Config) CourierTemplatesVerificationCodeValid(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierTemplatesHelper(ctx, ViperKeyCourierTemplatesVerificationCodeValidEmail)
 }
 
 func (p *Config) CourierTemplatesRecoveryInvalid(ctx context.Context) *CourierEmailTemplate {

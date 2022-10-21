@@ -80,9 +80,10 @@ const (
 )
 
 const (
-	InfoSelfServiceVerification           ID = 1080000 + iota // 1080000
-	InfoSelfServiceVerificationEmailSent                      // 1080001
-	InfoSelfServiceVerificationSuccessful                     // 1080002
+	InfoSelfServiceVerification                  ID = 1080000 + iota // 1080000
+	InfoSelfServiceVerificationEmailSent                             // 1080001
+	InfoSelfServiceVerificationSuccessful                            // 1080002
+	InfoSelfServiceVerificationEmailWithCodeSent                     // 1080003
 )
 
 const (
@@ -142,6 +143,7 @@ const (
 	ErrorValidationVerificationStateFailure                                  // 4070003
 	ErrorValidationVerificationMissingVerificationToken                      // 4070004
 	ErrorValidationVerificationFlowExpired                                   // 4070005
+	ErrorValidationVerificationCodeInvalidOrAlreadyUsed                      // 4070006
 )
 
 const (

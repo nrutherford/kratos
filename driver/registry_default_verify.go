@@ -56,6 +56,13 @@ func (m *RegistryDefault) VerificationStrategies(ctx context.Context) (verificat
 	return
 }
 
+// GetActiveVerificationStrategy returns the currently active verification strategy
+// If no recovery strategy has been set, an error is returned
+func (m *RegistryDefault) GetActiveVerificationStrategy(ctx context.Context) (verification.Strategy, error) {
+	activeRecoveryStrategy := m.Config().SelfServiceFlowVerificationUse(ctx)
+	return m.VerificationStrategies(ctx).Strategy(activeRecoveryStrategy)
+}
+
 func (m *RegistryDefault) AllVerificationStrategies() (recoveryStrategies verification.Strategies) {
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(verification.Strategy); ok {

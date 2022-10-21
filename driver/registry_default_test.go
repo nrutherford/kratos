@@ -714,6 +714,37 @@ func TestDriverDefault_Strategies(t *testing.T) {
 		}
 	})
 
+	t.Run("case=verification", func(t *testing.T) {
+		for k, tc := range []struct {
+			prep   func(conf *config.Config)
+			expect []string
+		}{
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", false)
+				},
+			},
+			{
+				prep: func(conf *config.Config) {
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", true)
+					conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
+				}, expect: []string{"code", "link"},
+			},
+		} {
+			t.Run(fmt.Sprintf("run=%d", k), func(t *testing.T) {
+				conf, reg := internal.NewFastRegistryWithMocks(t)
+				tc.prep(conf)
+
+				s := reg.VerificationStrategies(context.Background())
+				require.Len(t, s, len(tc.expect))
+				for k, e := range tc.expect {
+					assert.Equal(t, e, s[k].VerificationStrategyID())
+				}
+			})
+		}
+	})
+
 	t.Run("case=settings", func(t *testing.T) {
 		l := logrusx.New("", "")
 
@@ -838,6 +869,15 @@ func TestDefaultRegistry_AllStrategies(t *testing.T) {
 		require.Len(t, s, len(expects))
 		for k, e := range expects {
 			assert.Equal(t, e, s[k].RecoveryStrategyID())
+		}
+	})
+
+	t.Run("case=all verification strategies", func(t *testing.T) {
+		expects := []string{"code", "link"}
+		s := reg.AllVerificationStrategies()
+		require.Len(t, s, len(expects))
+		for k, e := range expects {
+			assert.Equal(t, e, s[k].VerificationStrategyID())
 		}
 	})
 }

@@ -20,5 +20,6 @@ func initViper(t *testing.T, c *config.Config) {
 	c.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+recovery.StrategyRecoveryLinkName+".enabled", true)
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "link")
 	c.MustSet(ctx, config.ViperKeySelfServiceRecoveryEnabled, true)
+	c.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "link")
 	c.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
 }

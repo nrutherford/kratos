@@ -5352,10 +5352,42 @@ components:
       description: nolint:deadcode,unused
       discriminator:
         mapping:
+          code: '#/components/schemas/submitSelfServiceVerificationFlowWithCodeMethodBody'
           link: '#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody'
         propertyName: method
       oneOf:
       - $ref: '#/components/schemas/submitSelfServiceVerificationFlowWithLinkMethodBody'
+      - $ref: '#/components/schemas/submitSelfServiceVerificationFlowWithCodeMethodBody'
+    submitSelfServiceVerificationFlowWithCodeMethodBody:
+      properties:
+        code:
+          description: |-
+            Code from verification email
+
+            Sent to the user once a verification has been initiated and is used to prove
+            that the user is in possession of the email
+          type: string
+        csrf_token:
+          description: Sending the anti-csrf token is only required for browser login
+            flows.
+          type: string
+        email:
+          description: |-
+            Email to Verify
+
+            Needs to be set when initiating the flow. If the email is a registered
+            verification email, a verification code will be sent. If the email is not known,
+            an email with details on what happened will be sent instead.
+
+            format: email
+          type: string
+        method:
+          description: Method supports `link` and `code` only right now.
+          type: string
+      required:
+      - email
+      - method
+      type: object
     submitSelfServiceVerificationFlowWithLinkMethodBody:
       properties:
         csrf_token:

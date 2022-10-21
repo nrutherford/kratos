@@ -4423,6 +4423,31 @@
       "description": "nolint:deadcode,unused",
       "type": "object"
     },
+    "submitSelfServiceVerificationFlowWithCodeMethodBody": {
+      "type": "object",
+      "required": [
+        "email",
+        "method"
+      ],
+      "properties": {
+        "code": {
+          "description": "Code from verification email\n\nSent to the user once a verification has been initiated and is used to prove\nthat the user is in possession of the email",
+          "type": "string"
+        },
+        "csrf_token": {
+          "description": "Sending the anti-csrf token is only required for browser login flows.",
+          "type": "string"
+        },
+        "email": {
+          "description": "Email to Verify\n\nNeeds to be set when initiating the flow. If the email is a registered\nverification email, a verification code will be sent. If the email is not known,\nan email with details on what happened will be sent instead.\n\nformat: email",
+          "type": "string"
+        },
+        "method": {
+          "description": "Method supports `link` and `code` only right now.",
+          "type": "string"
+        }
+      }
+    },
     "submitSelfServiceVerificationFlowWithLinkMethodBody": {
       "type": "object",
       "required": [

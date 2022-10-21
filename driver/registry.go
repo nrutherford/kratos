@@ -134,8 +134,9 @@ type Registry interface {
 	link.VerificationTokenPersistenceProvider
 	link.RecoveryTokenPersistenceProvider
 
-	code.RecoveryCodeSenderProvider
+	code.SenderProvider
 	code.RecoveryCodePersistenceProvider
+	code.VerificationCodePersistenceProvider
 
 	recovery.FlowPersistenceProvider
 	recovery.ErrorHandlerProvider

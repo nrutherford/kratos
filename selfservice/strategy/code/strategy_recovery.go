@@ -251,7 +251,7 @@ type submitSelfServiceRecoveryFlowWithCodeMethodBody struct {
 	Method string `json:"method"`
 }
 
-func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
+func (s *Strategy) isRecoveryCodeFlow(f *recovery.Flow) bool {
 	value, err := f.Active.Value()
 	if err != nil {
 		return false
@@ -260,7 +260,7 @@ func (s Strategy) isCodeFlow(f *recovery.Flow) bool {
 }
 
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
-	if !s.isCodeFlow(f) {
+	if !s.isRecoveryCodeFlow(f) {
 		return errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
@@ -501,7 +501,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		return s.HandleRecoveryError(w, r, f, body, err)
 	}
 
-	if err := s.deps.RecoveryCodeSender().SendRecoveryCode(ctx, r, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(ctx, r, f, identity.VerifiableAddressTypeEmail, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}

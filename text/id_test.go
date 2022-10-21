@@ -25,7 +25,11 @@ func TestIDs(t *testing.T) {
 	assert.Equal(t, 1060003, int(InfoSelfServiceRecoveryEmailWithCodeSent))
 
 	assert.Equal(t, 1070000, int(InfoNodeLabel))
+
 	assert.Equal(t, 1080000, int(InfoSelfServiceVerification))
+	assert.Equal(t, 1080001, int(InfoSelfServiceVerificationEmailSent))
+	assert.Equal(t, 1080002, int(InfoSelfServiceVerificationSuccessful))
+	assert.Equal(t, 1080003, int(InfoSelfServiceVerificationEmailWithCodeSent))
 
 	assert.Equal(t, 4000000, int(ErrorValidation))
 	assert.Equal(t, 4000001, int(ErrorValidationGeneric))
@@ -43,11 +47,16 @@ func TestIDs(t *testing.T) {
 	assert.Equal(t, 4060000, int(ErrorValidationRecovery))
 	assert.Equal(t, 4060001, int(ErrorValidationRecoveryRetrySuccess))
 	assert.Equal(t, 4060002, int(ErrorValidationRecoveryStateFailure))
+	assert.Equal(t, 4060004, int(ErrorValidationRecoveryTokenInvalidOrAlreadyUsed))
+	assert.Equal(t, 4060005, int(ErrorValidationRecoveryFlowExpired))
+	assert.Equal(t, 4060006, int(ErrorValidationRecoveryCodeInvalidOrAlreadyUsed))
 
 	assert.Equal(t, 4070000, int(ErrorValidationVerification))
 	assert.Equal(t, 4070001, int(ErrorValidationVerificationTokenInvalidOrAlreadyUsed))
+	assert.Equal(t, 4070002, int(ErrorValidationVerificationRetrySuccess))
+	assert.Equal(t, 4070003, int(ErrorValidationVerificationStateFailure))
+	assert.Equal(t, 4070005, int(ErrorValidationVerificationFlowExpired))
+	assert.Equal(t, 4070006, int(ErrorValidationVerificationCodeInvalidOrAlreadyUsed))
 
 	assert.Equal(t, 5000000, int(ErrorSystem))
-
-	assert.Equal(t, 4060006, int(ErrorValidationRecoveryCodeInvalidOrAlreadyUsed))
 }

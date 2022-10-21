@@ -136,7 +136,7 @@ type RegistryDefault struct {
 	selfserviceVerificationExecutor *verification.HookExecutor
 
 	selfserviceLinkSender *link.Sender
-	selfserviceCodeSender *code.RecoveryCodeSender
+	selfserviceCodeSender *code.Sender
 
 	selfserviceRecoveryErrorHandler *recovery.ErrorHandler
 	selfserviceRecoveryHandler      *recovery.Handler
@@ -686,6 +686,10 @@ func (m *RegistryDefault) RecoveryCodePersister() code.RecoveryCodePersister {
 
 func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPersister {
 	return m.Persister()
+}
+
+func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersister {
+	return m.persister
 }
 
 func (m *RegistryDefault) Persister() persistence.Persister {

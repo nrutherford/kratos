@@ -16,4 +16,14 @@ type (
 	RecoveryCodePersistenceProvider interface {
 		RecoveryCodePersister() RecoveryCodePersister
 	}
+
+	VerificationCodePersister interface {
+		CreateVerificationCode(ctx context.Context, dto *CreateVerificationCodeParams) (*VerificationCode, error)
+		UseVerificationCode(ctx context.Context, fID uuid.UUID, code string) (*VerificationCode, error)
+		DeleteVerificationCodesOfFlow(ctx context.Context, fID uuid.UUID) error
+	}
+
+	VerificationCodePersistenceProvider interface {
+		VerificationCodePersister() VerificationCodePersister
+	}
 )

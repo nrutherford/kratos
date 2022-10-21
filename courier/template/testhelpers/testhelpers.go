@@ -76,6 +76,10 @@ func TestRemoteTemplates(t *testing.T, basePath string, tmplType courier.Templat
 			return email.NewVerificationInvalid(d, &email.VerificationInvalidModel{})
 		case courier.TypeVerificationValid:
 			return email.NewVerificationValid(d, &email.VerificationValidModel{})
+		case courier.TypeVerificationCodeInvalid:
+			return email.NewVerificationCodeInvalid(d, &email.VerificationCodeInvalidModel{})
+		case courier.TypeVerificationCodeValid:
+			return email.NewVerificationCodeValid(d, &email.VerificationCodeValidModel{})
 		default:
 			return nil
 		}

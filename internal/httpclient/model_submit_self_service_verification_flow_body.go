@@ -18,7 +18,15 @@ import (
 
 // SubmitSelfServiceVerificationFlowBody - nolint:deadcode,unused
 type SubmitSelfServiceVerificationFlowBody struct {
+	SubmitSelfServiceVerificationFlowWithCodeMethodBody *SubmitSelfServiceVerificationFlowWithCodeMethodBody
 	SubmitSelfServiceVerificationFlowWithLinkMethodBody *SubmitSelfServiceVerificationFlowWithLinkMethodBody
+}
+
+// SubmitSelfServiceVerificationFlowWithCodeMethodBodyAsSubmitSelfServiceVerificationFlowBody is a convenience function that returns SubmitSelfServiceVerificationFlowWithCodeMethodBody wrapped in SubmitSelfServiceVerificationFlowBody
+func SubmitSelfServiceVerificationFlowWithCodeMethodBodyAsSubmitSelfServiceVerificationFlowBody(v *SubmitSelfServiceVerificationFlowWithCodeMethodBody) SubmitSelfServiceVerificationFlowBody {
+	return SubmitSelfServiceVerificationFlowBody{
+		SubmitSelfServiceVerificationFlowWithCodeMethodBody: v,
+	}
 }
 
 // SubmitSelfServiceVerificationFlowWithLinkMethodBodyAsSubmitSelfServiceVerificationFlowBody is a convenience function that returns SubmitSelfServiceVerificationFlowWithLinkMethodBody wrapped in SubmitSelfServiceVerificationFlowBody
@@ -32,6 +40,19 @@ func SubmitSelfServiceVerificationFlowWithLinkMethodBodyAsSubmitSelfServiceVerif
 func (dst *SubmitSelfServiceVerificationFlowBody) UnmarshalJSON(data []byte) error {
 	var err error
 	match := 0
+	// try to unmarshal data into SubmitSelfServiceVerificationFlowWithCodeMethodBody
+	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceVerificationFlowWithCodeMethodBody)
+	if err == nil {
+		jsonSubmitSelfServiceVerificationFlowWithCodeMethodBody, _ := json.Marshal(dst.SubmitSelfServiceVerificationFlowWithCodeMethodBody)
+		if string(jsonSubmitSelfServiceVerificationFlowWithCodeMethodBody) == "{}" { // empty struct
+			dst.SubmitSelfServiceVerificationFlowWithCodeMethodBody = nil
+		} else {
+			match++
+		}
+	} else {
+		dst.SubmitSelfServiceVerificationFlowWithCodeMethodBody = nil
+	}
+
 	// try to unmarshal data into SubmitSelfServiceVerificationFlowWithLinkMethodBody
 	err = newStrictDecoder(data).Decode(&dst.SubmitSelfServiceVerificationFlowWithLinkMethodBody)
 	if err == nil {
@@ -47,6 +68,7 @@ func (dst *SubmitSelfServiceVerificationFlowBody) UnmarshalJSON(data []byte) err
 
 	if match > 1 { // more than 1 match
 		// reset to nil
+		dst.SubmitSelfServiceVerificationFlowWithCodeMethodBody = nil
 		dst.SubmitSelfServiceVerificationFlowWithLinkMethodBody = nil
 
 		return fmt.Errorf("Data matches more than one schema in oneOf(SubmitSelfServiceVerificationFlowBody)")
@@ -59,6 +81,10 @@ func (dst *SubmitSelfServiceVerificationFlowBody) UnmarshalJSON(data []byte) err
 
 // Marshal data from the first non-nil pointers in the struct to JSON
 func (src SubmitSelfServiceVerificationFlowBody) MarshalJSON() ([]byte, error) {
+	if src.SubmitSelfServiceVerificationFlowWithCodeMethodBody != nil {
+		return json.Marshal(&src.SubmitSelfServiceVerificationFlowWithCodeMethodBody)
+	}
+
 	if src.SubmitSelfServiceVerificationFlowWithLinkMethodBody != nil {
 		return json.Marshal(&src.SubmitSelfServiceVerificationFlowWithLinkMethodBody)
 	}
@@ -71,6 +97,10 @@ func (obj *SubmitSelfServiceVerificationFlowBody) GetActualInstance() interface{
 	if obj == nil {
 		return nil
 	}
+	if obj.SubmitSelfServiceVerificationFlowWithCodeMethodBody != nil {
+		return obj.SubmitSelfServiceVerificationFlowWithCodeMethodBody
+	}
+
 	if obj.SubmitSelfServiceVerificationFlowWithLinkMethodBody != nil {
 		return obj.SubmitSelfServiceVerificationFlowWithLinkMethodBody
 	}
